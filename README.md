@@ -175,8 +175,6 @@ const orderMovie = function (movieName)  { ... }                                
 
 ![image](https://user-images.githubusercontent.com/72068418/176543971-5d078b0b-c2e8-4a7a-9b69-ae5eb5b24ec6.png)
 
-## Editors
+## Editor
 
-### Tom Rozenwaks
-### Jonathan Ohayon
-### Yoav Ben-Horin
+###Coral Yossef

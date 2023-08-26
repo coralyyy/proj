@@ -3,24 +3,25 @@ const session			= require('express-session');
 const MongoDB 			= require('./public/js/db')
 const passport			= require('passport');
 const localStrategy		= require('passport-local').Strategy;
+const bcrypt			= require('bcrypt');
 const path 				= require("path");
 const app				= express();
+const fs 				= require('fs');
 
 
 
+// Middleware
 
-var db = (() => {
-	try{
-		var dbo = MongoDB.db()
-		app.listen(3000, () => {
-			console.log('http://localhost:3000');
-		});
-		return dbo
-	}
-	catch(e){
-		throw e
-	}
-})()
+
+// (async () => {
+// 	try{
+// 		var db = await MongoDB.connectDB()
+// 		return
+// 	}
+// 	catch(e){
+// 		done(e)
+// 	}
+// })()
 app.use(express.static('public'))
 app.set('views', path.join(__dirname, 'public/html'));
 app.engine('html', require('ejs').renderFile);
@@ -44,15 +45,17 @@ passport.serializeUser((user, done) => {
   });
 
 passport.deserializeUser((user, done) => {
+	console.log("deserializing the user")
+	console.log("deserializing user: " + user.username)
 	done(null, user);
   });
 
 
 passport.use(new localStrategy(function (username, password, done) {
 	console.log("initiate passport's localStrategy")
-	let isDone = (async (username, password, done) => {
+	var isDone = (async (username, password, done) => {
 		try{
-		const result = await MongoDB.findUserByName(username, password, done, db)
+		const result = await MongoDB.findUserByName(username, password, done)
 		return result
 		}
 		catch(e){
@@ -64,214 +67,78 @@ passport.use(new localStrategy(function (username, password, done) {
 
 function isLoggedIn(req, res, next) {
 	console.log("authenticated: " + req.isAuthenticated())
-	if (req.isAuthenticated()){
-		console.log("User Role: " + userInfo(res).role)
-		return next();
-	} 
+	if (req.isAuthenticated()) return next();
 	res.render('login');
 }
 
 function isLoggedOut(req, res, next) {
 	if (!req.isAuthenticated()) return next();
-	res.render('adminHomePage.html');
+	res.render('homePage.html');
 }
 
-  var userInfo = function LoggedUserInfo(res){
-	let sessionId = res.socket.parser.incoming.sessionID
-	let sessionInfo = res.socket.parser.incoming.sessionStore.sessions[sessionId]
-	let passportUserInfo = JSON.parse(sessionInfo).passport.user
-	return passportUserInfo
-  }
+app.use('/homepage', function(req, res, next){
+    
+    var options = {
+        root: path.join(__dirname)
+    };
+     
+    var fileName = '/public/html/userInfo.html'
+    res.sendFile(fileName, options, function (err) {
+        if (err) {
+            next(err)
+        } else {
+            console.log('Sent:', fileName)
+            next()
+        }
+    })
+})
 
 // ROUTES
 app.get('/', isLoggedIn, (req, res) => {
-	
-	if(userInfo(res).role == 'admin'){
-		res.render('adminHomePage.html')
-	}
-	else{
-		res.render('userHomePage.html')
-	}	
+
+	res.render('homePage.html');
 });
 
 app.get('/login', isLoggedOut, (req, res) => {
 	res.render('login');
 });
 
-app.get('/homePage',isLoggedIn, (req, res) => {
-	if(userInfo(res).role == 'admin'){
-		res.render('adminHomePage.html')
-	}
-	else{
-		res.render('userHomePage.html')
-	}	
+app.get('/about', (req, res) => {
+	res.render('/index.html');
+});
+app.get('/loadingPage', (req, res) => {
+	// let sessionId = res.socket.parser.incoming.sessionID
+	// console.log(sessionId)
+	// let sessionInfo = res.socket.parser.incoming.sessionStore.sessions[sessionId]
+	// console.log(sessionInfo)
+	// let passportUserInfo = JSON.parse(sessionInfo).passport
+	// console.log(passportUserInfo)
+	res.render('loadingPage.html')
+
+	const content = `<div class="home">
+	<h1>k </h1>
+	<a href="/logout">aaaaaaaa</a>
+	</div>`
+	fs.writeFile(__dirname + '/public/html/userInfo.html', content, err => {
+		if (err) {
+			console.error(err);
+		}
+	});
+//	res.render('homePage.html', JSON.stringify(passportUserInfo))
+	//res.render('homePage.html')
+    res.send();
+
+
 });
 
-app.get('/addUser',isLoggedIn, (req, res) => {
-	if(uuserInfo(res).role == 'admin'){
-		res.render('adminHomePage.html')
-	}
-	else{
-		res.render('userHomePage.html')
-	}	
-});
-
-app.get('/removeUser',isLoggedIn, (req, res) => {
-	if(userInfo(res).role == 'admin'){
-		res.render('adminHomePage.html')
-	}
-	else{
-		res.render('userHomePage.html')
-	}	
-});
-
-app.get('/addMovie',isLoggedIn, (req, res) => {
-	if(userInfo(res).role == 'admin'){
-		res.render('adminHomePage.html')
-	}
-	else{
-		res.render('userHomePage.html')
-	}	
-});
-
-app.get('/pickMovie',isLoggedIn, (req, res) => {
-	if(userInfo(res).role == 'admin'){
-		res.render('adminHomePage.html')
-	}
-	else{
-		res.render('userHomePage.html')
-	}	
-});
-
-app.get('/successfulLogin', isLoggedIn, (req, res) => {
-		res.render('userSuccessfulLogin.html')
+app.get('/homepage', (req, res) => {
+	res.render('homePage.html')
 });
 
 
-app.get('/userMoviesList', isLoggedIn, (req, res) => {
-	var passportUserInfo = userInfo(res)
-	var currentUser = passportUserInfo.username;
-	(() => {
-		try{
-			MongoDB.getAllUserMovies(currentUser, db).then((userMoviesArr) => {
-				res.send(userMoviesArr)});
-		}
-		catch(e){
-			throw e 
-		}
-	})()
-})
-
-
-
-app.get('/orderList', isLoggedIn, (req, res) => {
-	(() => {
-		try{
-			MongoDB.getAllOrders(db).then((orderArr) => {
-				res.send(orderArr)});
-		}
-		catch(e){
-			throw e 
-		}
-	})()
-});
-
-app.get('/movieList', isLoggedIn, (req, res) => {
-	(() => {
-		try{
-			MongoDB.getAllMovies(db).then((movieArr) => {
-				res.send(movieArr)});
-		}
-		catch(e){
-			throw e 
-		}
-	})()
-});
-
-app.get('/userList', isLoggedIn, (req, res) => {
-	(() => {
-		try{
-			MongoDB.getAllUsers(db).then((userArr) => {
-				res.send(userArr)});
-		}
-		catch(e){
-			throw e 
-		}
-	})()
-});
-
-app.get('/pickaMovie', isLoggedIn, (req, res) => {
-	(() => {
-		try{
-			let user = userInfo(res).username
-			movie = req.query.movie
-			MongoDB.InsertOrder(movie, user, db).then((didOrder) => {
-				res.send(didOrder)});
-		} 
-		catch(e){
-			throw e 
-		}
-	})()
-});
-
-
-app.post('/addUser', isLoggedIn, (req, res) => {
-	(async () => {
-		try{
-			username = req.body.username
-			password = req.body.password
-			if(req.body.role == "on"){
-				role = 'admin'
-			}
-			else{
-				role = 'user'
-			}
-			movies = []
-			const createUser = await MongoDB.createUser(username, password,role, movies,db)
-			if(createUser){
-				//ALERT
-			}
-		}
-		catch(e){
-			throw e 
-		}
-	  })();
-});
-
-app.post('/removeUser', isLoggedIn, (req, res) => {
-	(async () => {
-		try{
-			username = req.body.username
-			const removeUser = await MongoDB.removeUser(username, db)
-			if(removeUser){
-				//ALERT
-			}
-		}
-		catch(e){
-			throw e 
-		}
-	  })();
-});
-
-app.post('/addMovie', isLoggedIn, (req, res) => {
-	(async () => {
-		try{
-			movie = req.body["Movie Name"]
-			genre = req.body["Genre"]
-			image = req.body["image"]
-			const addMovie = await MongoDB.addMovie(movie, genre, image, db)
-			if(addMovie){
-				//ALERT
-			}
-		}
-		catch(e){
-			throw e 
-		}
-	  })();
-});
 
 app.post('/login', passport.authenticate('local', {
-	successRedirect: 'successfulLogin',
+	successRedirect: 'loadingPage',
 	failureRedirect: 'login?error=true',
 }));
 
@@ -280,7 +147,41 @@ app.get('/logout', function (req, res) {
 	res.redirect('/');
 });
 
-		
+		app.listen(3000, () => {
+			console.log("Listening on port 3000");
+		});
+
+// Setup our admin user
+// app.get('/setup', async (req, res) => {
+// 	const exists = (async (username, password) => {
+// 		const result = await MongoDB.doesUserExist(username, password)
+// 		return result
+// 	  })("admin", "123")
+// 	if (exists) {
+// 		res.redirect('/login');
+// 		return;
+// 	};
+
+// 	bcrypt.genSalt(10, function (err, salt) {
+// 		if (err) return next(err);
+// 		bcrypt.hash("pass", salt, function (err, hash) {
+// 			if (err) return next(err);
+			
+// 			const newAdmin = {
+// 				"username": "admin",
+// 				"password": hash,
+// 				"role": "admin",
+// 				"movies": Array
+// 			};
+// 			const exists = (async (username, password,role,movies) => {
+// 				const result = await MongoDB.createUser(username, password)
+// 				return result
+// 			  })(newAdmin.username,newAdmin.password,newAdmin.role,newAdmin.movies)
+
+// 			res.redirect('/login');
+// 		});
+// 	});
+// });
 
 // const getCircularReplacer = () => {
 //     const seen = new WeakSet();

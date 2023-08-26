@@ -177,4 +177,4 @@ const orderMovie = function (movieName)  { ... }                                
 
 ## Editor
 
-###Coral Yossef
+###  Coral Yossef

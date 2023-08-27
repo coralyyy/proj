@@ -5,29 +5,25 @@ Movie Picker is an innovative application developed on the Node.js platform, int
 
 ## User Types
 
-### admin - the admin has it own interface to do several functionalities which we will expend later on.
-### user = the user interface is has less functionality and can display the movies that he ordered. 
+### admin - In the hierarchical structure of the application, administrators hold privileged access. They are vested with comprehensive capabilities, which include but are not limited to movie addition, user management (including removal), and the authority to place movie orders on behalf of users. Further insights into admin functionalities will be expounded later on.
+### user = the user interface is has less functionality , the user can display the movies that he ordered. 
 
 
 ## Functionality
 
 ### High Level Functionality
 
-The is a user admin that is precreted and he can add movies, users (also remove) and orders movies for his user.
-After an admin create a normal user or and admin the user can log in to his own user and order movies from the movies list,
-later on he can see what movies and when he ordered them.
+The is a user admin that is precreted . This admin can do big things, like adding new movies, creating new accounts for people, and even choosing movies for others. When this admin makes new accounts, those people can log in and pick movies to watch. Later, they can see a list of the movies they picked and when they picked them.
 
 ### Backend Functionality 
 
 #### Login section
 
-The server runs on express which is a backend web application framework for Node.js. 
-Along with that the login-in functionality is based on 'passport' locay strategy (Username and password authentication)
-which allows us to serialize the raw user's data that comes 
-fron the log-in action and deserialize it to actual JSON data that we using across the application.
+TThe "backend" is like the behind-the-scenes part of the program that does important jobs. The program uses something called Express to help it work smoothly. One of the important things it does is let people log in.
 
-every page has a GET method implemented by express which allows use to always check whether the user is logged in and
-therefore redirect him the the relevent pages (logged user can go back to the login page by using /login)
+Logging in is like showing a secret password to get in. The program checks if the password is right using a tool called "passport." This helps keep things safe. It also remembers who you are and what you're allowed to do.
+
+Each page in the program knows if you're logged in or not. If you are, it shows you the right stuff. If you're not, it might send you back to the login page to make sure you're allowed to use the program.
 
 ![image](https://user-images.githubusercontent.com/72068418/176535678-6d3bb6f4-432b-4d90-b443-97ae5f67836a.png)
 

@@ -1,6 +1,7 @@
 # Project - Movie Picker
 
-Movie Picker is an application based on Node.js integrated with MongoDB, as well as html and css to display the frontend.
+Movie Picker is an innovative application developed on the Node.js platform, integrated seamlessly with MongoDB for robust data management, and enhanced with HTML and CSS to create an engaging frontend user interface.
+
 
 ## User Types
 
